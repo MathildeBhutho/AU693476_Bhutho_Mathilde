@@ -1,0 +1,43 @@
+---
+title: "Script_vis"
+output: html_document
+date: "2022-11-28"
+---
+
+
+#Manually saving the spreadsheet csv-file in the data folder
+
+#Open up the tidyverse and here package 
+```{r}
+library(tidyverse)
+library(here)
+```
+
+
+```{r}
+read_csv2("data/W45_spreadsheet_W45.csv")->kongeraekken
+```
+
+
+#Read the csv-file and naming it "kongeraekken"
+read_csv2("data/W45_spreadsheet_W45.csv")->kongeraekken
+
+#Open the spreadsheet in R
+kongeraekken
+
+
+#Now the process of creating a ggplot can begin by piping 
+
+  
+```{r}
+kongeraekken %>% 
+  select(start_reign,reign_duration) %>% 
+  count(start_reign,reign_duration) %>%    
+  ggplot(aes(x=start_reign,y=reign_duration))+
+  geom_col()+
+  labs(title="Duration of reign")+
+  scale_y_continuous(breaks=seq(0,75,5))
+```
+
+  
+
