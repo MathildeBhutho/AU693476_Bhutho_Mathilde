@@ -1,0 +1,55 @@
+---
+title: "Julekalender_48"
+output: html_document
+date: "2022-12-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+The following study will try to get a view on the Danish julekalenderer that has been sent on the two tv-channels DR and Tv2 through time. The data is scrabed from the list on the bottom of each of these pages: (DR) https://da.wikipedia.org/wiki/B%C3%B8rnenes_U-landskalender and (Tv2) https://da.wikipedia.org/wiki/TV_2%27s_tv-julekalendere
+
+
+# First I start off with finding the packages from Library I need for the analysis 
+```{r}
+library(rvest)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(janitor)
+```
+
+# Scrabing down DR's julekalendere
+To scrabe down information I use the Google Chrome function 'SelectorGadget' 
+```{r julekalender}
+Julekalender <- "https://da.wikipedia.org/wiki/Tv-julekalender#Oversigter_over_tv-julekalendere"
+# scrape the website
+jul_html <- read_html(Julekalender)
+```
+
+#Extracting the wholetablet 
+```{r scrape-rows}
+whole_table <- jul_html %>% 
+ html_nodes("tr") %>%
+ html_text(trim = FALSE) 
+head(whole_table)
+```
+
+#Separating the list 
+```{r}
+string <- whole_table
+string <- unlist(strsplit(string, "\n"))
+```
+
+#Creating a dataframe
+```{r}
+jul_dataframe <- data.frame(string)
+```
+
+#Showing the dataframe in Rmd
+```{r}
+jul_dataframe
+```
+
