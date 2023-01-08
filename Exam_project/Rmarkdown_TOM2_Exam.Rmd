@@ -1,0 +1,337 @@
+---
+title: "Danish_vacation_exam"
+author: "Mathilde Bhutho"
+output: html_document
+date: "2023-01-06"
+---
+
+Notice! This Rmarkdown/html file contains the project on Danish vacation habits 1867 - 1881 and all technical explanation hereto. For historical explanation on this study please read the project report.
+
+Notice! This study will try to follow the FAIR-principles so it can be used by others.
+
+Notice! The following study will be based on Danish sources.
+
+Notice! This document have been worked out on a  MacBook Pro 13-inch, M1, 2020, 8 GB RAM, which runs macOS: Ventura 13.0.1.
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+To prepare R (in the RStudio workspace) for historical sources that later on will be downloaded hereto, I will start by downloading the packages I need.
+
+The packages needed for this project are followed below with documentation. Loading the programs are essential for several tasks in this study
+
+Documentation for each package:
+
+(The following packages documentation comes from Max Odsbjergs project: https://posit.cloud/content/5015748)
+
+*https://www.tidyverse.org/packages/ <br>
+*https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html <br>
+*https://lubridate.tidyverse.org/ <br>
+*https://ggplot2.tidyverse.org/ <br>
+
+The rest of the documentations I have found:
+
+*https://www.rdocumentation.org/packages/dplyr/versions/0.7.8
+*https://www.rdocumentation.org/packages/tidyr/versions/1.2.1
+*https://www.rdocumentation.org/packages/here/versions/1.0.1
+
+Please follow links above for clarification of each package. 
+
+```{r}
+library(tidyverse)
+library(tidytext)
+library(lubridate)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(here)
+```
+
+Drawing on the data organising principles of Karl W. Broman's & Kara H. Woo's article "Data Organization in Spreadsheets" I have created two folders for later use.  
+```{r}
+dir.create("data")
+dir.create("output_data")
+```
+
+Now the groundwork for the project has been made. 
+
+## Short project introduction
+In short this project will examine the Danish people vacation habits in the period 1867 - 1881 with a focus on: 'badehotel' (in English: beach hotel) and 'sommerhus' (in English: summer cottage). In order to do this, I have used Mediestream (https://www2.statsbiblioteket.dk/mediestream/) and Kb.labs API generator (http://labs.statsbiblioteket.dk/labsapi/api//api-docs?url=/labsapi/api/openapi.yaml). The process of using this to extrat material can be read in the project report, together with historical perspective hereon.
+
+
+## Downloading the csv-URL here to RStudio 
+I started by creating a chunk where I named the material I was downloading into R, "newspaper" it is roughly what this dataframe should receive from the csv-file. 
+
+I have used the function: read_csv because it sets up the material in a tibble (a special kind of dataframe) and insert the csv-URL. Then I run it. 
+```{r}
+newspapers <- read_csv("http://labs.statsbiblioteket.dk/labsapi/api/aviser/export/fields?query=py%3A%5B1867%20TO%201881%5D%20AND%20%28sommerhus%2A%20OR%20badehotel%2A%29&fields=link&fields=recordID&fields=timestamp&fields=pwa&fields=cer&fields=fulltext_org&fields=pageUUID&fields=editionUUID&fields=titleUUID&fields=editionId&fields=familyId&fields=newspaper_page&fields=newspaper_edition&fields=lplace&fields=location_name&fields=location_coordinates&max=-1&structure=header&structure=content&format=CSV")
+```
+
+To see all the information imported to RStudio click on "newspapers" in right top box named "Data". Then a window pops up with a tibble containing all the information from the csv-URL. 
+
+Now the historical material is ready to be used here in R. The question from here is how should the material be used. To examine the Danish people's vacation habits in the period it would be nice to see which year the two words where mentioned the most in the Danish newspapers. 
+
+## Visualize which year the words 'badehotel' and 'sommerhus' was mentioned the most in the period 1867 to 1881
+Before making a visualisation, I need to extract the year from the fourth column in the tibble called "timestamp" - that is containing both year, date, and time. To create a bar chart with an overview of the years I should have its own column. In order to do this I use the lubridate package loaded from the library above. The code I have used for this I would like to credit Max Odsbjerg Pedersen because he helped me out with it. 
+
+To make it clear what I now is about to do with tibble I name it "newspapers_year". Then I know that this edition of the tibble is with the change of year.
+
+```{r}
+newspapers_year <- newspapers %>% 
+  mutate(Year=year(timestamp))
+```
+
+What here has been done is creating a new tibble calling after all the information from the first and then created a column for only years drawn out of the column "timestamp". To see the tipple click on the new data in the top right box called "newspapers_year". In the new window there, in the end of the tibble, has appeared a new column with the name "Year". 
+
+Now I am ready to move along to the visualization.
+NB. to make the following visualization I know that all the newspapers contains the words because that was have they have been selected in Mediestream. A further process of looking at each word separately will follow later on. 
+To make this visualization I have made my coding on the basis of what I did in my assignment 'Kongeraekken_W47'. The coding from there I have made on what I have learned from Adela Sobotkova's course (this in particular we worked on in W47). 
+
+"calling on" the tibble >
+as the same year appear many times, I have asked R to collect it in blocks of 1867, 1868, 1869 etc. >
+asked RS to make the x-axes to contain the number of years and the y-axes to show the number of times the words mentioned >
+then I have used the ggplot2 packaged loaded in the library chunk above >
+then I have named all parts of the bar chart
+
+```{r}
+newspapers_year %>% 
+  count(Year) %>% 
+  ggplot(aes(x=Year,y=n))+
+  geom_col()+
+  labs(title="Freguency_of_the_words_'Badehotel'_and_'Sommerhus'_mentioned_in_Newspapers_1867_to_1881")+
+  xlab("Years")+
+  ylab("Freguency")+
+  scale_x_continuous(breaks = seq(1867,1881,1))
+```
+
+From this bar chart it was in the year 1879 that the words where mentioned the most. To follow the tendency more clear I will now create a graph.
+
+In order to do this I almost use the same code as above. Instead of using the command "geom_col" I replace it with "geom_line" which generates the graph. 
+
+```{r}
+newspapers_year %>% 
+  count(Year) %>% 
+  ggplot(aes(x=Year,y=n))+
+  geom_line()+
+  labs(title="Freguency_of_the_words_'Badehotel'_and_'Sommerhus'_mentioned_in_Newspapers_1867_to_1881")+
+  xlab("Years")+
+  ylab("Freguency")+
+  scale_x_continuous(breaks = seq(1867,1881,1))
+```
+
+Now it is quite clear to see how the frequency evolves through time. What this means in a historical context will be clarified in the project report. 
+
+## Which Newspaper used the words the most?
+To answer the question I need to create another visualization. A bar chart containing the newspapers and the frequency. The following code has been draws on code used above.
+
+```{r}
+newspapers_year %>% 
+  count(familyId) %>% 
+  ggplot(aes(x=familyId,y=n))+
+  geom_col()+
+  labs(title="Newspaper_with_highest_frequence")+
+  xlab("Newspaper")+
+  ylab("Frequence")+
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+Here I can see Berlingsketidende as the one paper that uses the words the most. 
+
+## Which word was the most freqent? 'Badehotel' or 'sommerhus'? (Use of text mining)
+After having clarified the frequency of the two words unified, it would be interesting to figure out which of the two words have been mentioned most frequent in the period. The codes used to this particular part are highly drawn on and inspired by R-Ladies Globals video on YouTube: https://www.youtube.com/watch?v=Z6-lBcGOmAo
+
+First step is to separate each word in the dataframe: "Newspapers_year" from the column "fulltext_org" into separate lines.
+
+```{r}
+(newspaper_tidy <- newspapers_year %>% 
+   select(familyId,fulltext_org) %>% 
+   unnest_tokens(word,fulltext_org))
+```
+
+Next step is to sort them by count and after most frequent words. Unfortunately, R does not have a stopwordlist for Danish words, so I must look around the "less important" words. 
+
+```{r}
+newspaper_freq <- newspaper_tidy %>% 
+  group_by(familyId) %>% 
+  count(word,sort=TRUE)
+
+newspaper_freq
+```
+
+To be able to look at the frequency for the words I have used the tidytext package.
+
+```{r}
+newspaper_idf <- newspaper_freq %>% 
+  bind_tf_idf(word,familyId,n)
+```
+
+Now I am able to search through words I am interested in. I searched after 'badehotel' and 'sommerhus' but for the fun of it search after specific beachhotels and vacation related words such as: feriehus (holiday house), a Danish synonym of beach hotel (strandhotel).
+
+```{r}
+newspaper_spec <- newspaper_idf %>% 
+  select(familyId,word,n) %>% 
+  filter(word %in% c("badehotel","sommerhus","ferie","skodborg",
+  "bandholm","aarøsund","strandhotel","feriehus",
+                     "rødvig kro","hornbæk"))
+
+newspaper_spec
+```
+
+Now I have the dataframe "Newspaper_spec" (stands for specific words) and to overview the results in it I will now create a visualization. 
+```{r}
+newspaper_spec %>% 
+  select(familyId,word,n) %>% 
+  ggplot(aes(x=n,y=reorder(word,n),fill=n))+
+  geom_col(show.legend = FALSE)+
+  labs(x="Word",
+       y="Frequency",
+       title = "Frequency_of_vacation_related_words")+
+  theme_minimal()+
+  theme(axis.text.x=element_text(angle = 45))
+```
+
+This shows clearly that the word 'badehotel' was the most frequent. 
+
+## Figure out in which context the words where used. (Use of text mining)
+Now it would be interesting to figure out in what context the words are used. Here I will just go after 'badehotel' and 'sommerhus'. The following coding draws on codes from this website: https://www.tidytextmining.com/ngrams.html 
+
+To work with newspapers in this fashion I need to get the package "janeautenr".
+
+Documentation of the package: *https://www.rdocumentation.org/packages/janeaustenr/versions/0.1.5/topics/austen_books
+
+```{r}
+library(janeaustenr)
+```
+
+Extracting sentences from the column "fulltext-org" on a lenght of 5 words
+```{r}
+newspaper_bigrams <- newspapers_year %>% 
+  select(fulltext_org,editionId) %>% 
+  unnest_tokens(bigram,fulltext_org,token = "ngrams",n=5) %>%   filter(!is.na(bigram))
+
+newspaper_bigrams
+```
+
+Count the times the sentences appear
+```{r}
+newspaper_bigrams %>% 
+  count(bigram, sort = TRUE)
+```
+
+The last part of the codes are again drawn and inspired by R-Ladies Globals video on YouTube: https://www.youtube.com/watch?v=Z6-lBcGOmAo
+
+Now I would like to split up the sentences so it later will be possible to search for specific words within.
+```{r}
+bigram_separated <- newspaper_bigrams %>% 
+  separate(bigram,c("word1","word2","word3","word4","word5"),
+           sep = " ")
+
+bigram_separated
+```
+
+Now I wil respectively search for the word 'badehotel' and 'sommerhus' in separately chunks.
+```{r}
+Newspaper_badehotel <- bigram_separated %>% 
+  filter(word1 == "badehotel" | word2 == "badehotel" | word3 == "badehotel" | 
+           word4 == "badehotel" | word5 == "badehotel") %>% 
+  distinct(word1,word2,word3,word4,word5)
+
+Newspaper_badehotel
+```
+```{r}
+Newspaper_sommerhus <- bigram_separated %>% 
+  filter(word1 == "sommerhus" | word2 == "sommerhus" | word3 == "sommerhus" | 
+           word4 == "sommerhus" | word5 == "sommerhus") %>% 
+  distinct(word1,word2,word3,word4,word5)
+
+Newspaper_sommerhus
+```
+
+The result of the textmining can be read in the project report.
+
+##Geographical representation of Danish Newspapers which mention the words 'badehotel' and 'sommerhus'
+The section above showed the interesting fact that the word mentioned the most in this period was 'badehotel'. 
+
+In this section it would be interesting to examine how geographical spread the newspapers was. For this specific task I need to work partly outside R because I have to insert longitude and latitude to the tibble. In the tibble "newspapers_year" there is a column named "location_coordinates". I cannot use this because all the coordinates are on towns, places, etc. mentioned in the newspaper's articles - all plotted together in one column. 
+What I need to do instead is to make R count the following elements of the tibble: familyId (names of newspapers) and lplace (city of publication). To be able to group the familyId in one row for each I need to leave out year but we know that the newspapers are represented from the period 1867 to 1881. The code for this has been inspired from the tasks made above. This new dataframe I here creates will be called "newspapers_grouped" 
+
+```{r}
+newspapers_grouped <- newspapers_year %>% 
+  count(familyId,lplace)
+
+newspapers_grouped
+```
+
+Now we have a new dataframe that only contains the count of newspapers published in the period 1867 to 1881 with the words 'badehotel' and 'sommerhus'. 
+
+To create a map to see the geographical wide spread of the newspapers all the coordinates for the cities needs to be inserted. It requires a manual workprocess that is not preferrable to do in R. Therefore, I need to convert the dataframe into a csv-file so I can work with the dataframe in OpenRefine.
+
+To save the data output in the folder "data" I have used this code from this webpage: https://sparkbyexamples.com/r-programming/r-export-csv-using-write-csv/ I insert it here and not under output_data because I see that more as a place to save finished aspects of the project. In the code below I also insert the package "here", which early on has been loaded, but I do it again so I am sure that the csv-file is going to be stored exactly where I want it to. 
+```{r}
+library(here)
+
+write.csv(newspapers_grouped,file = 'data/newspapers_grouped.csv',row.names = FALSE)
+```
+
+After the code has been runed the csv-file can know be found in the 'data' folder. As mentioned above the next step of this process will take place in OpenRefine. I use the 3.6.2 version of OpenRefine. See the the project report for explanation of the process. 
+
+Now the process of creating the map follows.
+
+The codes I have created for this is a result of this YouTube video: https://www.youtube.com/watch?v=dBk8gGX1MNk and some help from a fellow student Helene K. Knudsen.
+
+To create the map specific need to be installed and downloaded from the library.
+
+Documentation of the packages used:
+*https://www.rdocumentation.org/packages/mapproj/versions/1.2.9
+*https://www.rdocumentation.org/packages/leaflet/versions/2.1.1
+*https://www.rdocumentation.org/packages/maps/versions/3.4.1
+*https://www.rdocumentation.org/packages/crosstalk/versions/1.2.0
+
+```{r}
+library(leaflet)
+library(mapproj)
+library(maps)
+library(crosstalk)
+```
+
+Now downloading the csv-file generated in OpenRefine to R. Here the dataframe will be named "Newspaper_geo"  because it should be used to create a map. And in the next line making sure, that there are no empty cells. 
+
+```{r}
+Newspaper_geo <- read_csv("data/Newspapers_lon_lat_1.-kopi.csv")
+Newspaper_geo <- Newspaper_geo[complete.cases(Newspaper_geo),]
+```
+
+To make sure, that all the coordinates are numeric I ask R to verify that they are registered as numbers. 
+
+```{r}
+Newspaper_geo$latitude <- as.numeric(Newspaper_geo$latitude)
+Newspaper_geo$longitude <- as.numeric(Newspaper_geo$longitude)
+```
+
+
+Now for the creation of the map.
+```{r}
+Newspaper_geo <- 
+  leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(lat=Newspaper_geo$latitude,
+             lng = Newspaper_geo$longitude,
+             popup = paste(Newspaper_geo$familyId,'<br>',
+                           Newspaper_geo$lplace,'<br>',
+                           Newspaper_geo$n))
+```
+
+To create the map:
+```{r}
+Newspaper_geo
+```
+
+
+
